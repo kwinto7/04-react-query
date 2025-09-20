@@ -13,11 +13,13 @@ const client = axios.create({
   headers: { Authorization: `Bearer ${token}` },
 });
 
-interface TMDBSearchResponse {
+export interface TMDBSearchResponseFull {
+  page: number;
   results: Movie[];
+  total_pages: number;
+  total_results: number;
 }
 
-// Тип для можливих помилок TMDB
 interface TMDBErrorPayload {
   status_message?: string;
   status_code?: number;
@@ -25,9 +27,12 @@ interface TMDBErrorPayload {
   errors?: string[];
 }
 
-export async function searchMovies(query: string, page = 1): Promise<Movie[]> {
+export async function searchMoviesFull(
+  query: string,
+  page = 1
+): Promise<TMDBSearchResponseFull> {
   try {
-    const { data } = await client.get<TMDBSearchResponse>("/search/movie", {
+    const { data } = await client.get<TMDBSearchResponseFull>("/search/movie", {
       params: {
         query,
         page,
@@ -35,9 +40,8 @@ export async function searchMovies(query: string, page = 1): Promise<Movie[]> {
         language: "en-US",
       },
     });
-    return data?.results ?? [];
+    return data;
   } catch (err: unknown) {
-    // Без any: звужуємо тип і дістаємо повідомлення
     if (axios.isAxiosError<TMDBErrorPayload>(err)) {
       const status = err.response?.status;
       const payload = err.response?.data;
